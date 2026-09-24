@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.mypy_cache/
+catboost_info/
+.venv/
+.ipynb_checkpoints/
