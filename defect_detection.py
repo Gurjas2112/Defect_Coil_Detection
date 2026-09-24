@@ -130,45 +130,7 @@ print(mi_df.head(10).to_string(index=False))
 # Advanced Feature Engineering
 
 # %%
-def engineer_features(df, fit_iso=None):
-    df = df.copy()
-    raw_cols = [c for c in df.columns if c.startswith('X')]
-    vals = df[raw_cols].values
-
-    # ── Aggregate statistics ──
-    df['agg_mean']    = vals.mean(axis=1)
-    df['agg_std']     = vals.std(axis=1)
-    df['agg_max']     = vals.max(axis=1)
-    df['agg_min']     = vals.min(axis=1)
-    df['agg_range']   = df['agg_max'] - df['agg_min']
-    df['agg_iqr']     = np.percentile(vals, 75, axis=1) - np.percentile(vals, 25, axis=1)
-    df['agg_median']  = np.median(vals, axis=1)
-    df['agg_skew']    = pd.DataFrame(vals).skew(axis=1).values
-    df['agg_kurt']    = pd.DataFrame(vals).kurtosis(axis=1).values
-
-    # ── Stage-wise means (process has multiple stages) ──
-    # X1-X10: Stage 1 | X11-X20: Stage 2 | X21-X30: Stage 3
-    # X31-X40: Stage 4 | X41-X49: Stage 5
-    stages = [(1,10), (11,20), (21,30), (31,40), (41,49)]
-    for i, (s, e) in enumerate(stages, 1):
-        scols = [f'X{j}' for j in range(s, e+1) if f'X{j}' in df.columns]
-        df[f'stage{i}_mean'] = df[scols].mean(axis=1)
-        df[f'stage{i}_std']  = df[scols].std(axis=1)
-        df[f'stage{i}_max']  = df[scols].max(axis=1)
-
-    # ── Cross-stage interaction features ──
-    df['s1_s2_diff']  = df['stage1_mean'] - df['stage2_mean']
-    df['s2_s3_diff']  = df['stage2_mean'] - df['stage3_mean']
-    df['s3_s4_diff']  = df['stage3_mean'] - df['stage4_mean']
-    df['s4_s5_diff']  = df['stage4_mean'] - df['stage5_mean']
-    df['s1_s5_ratio'] = df['stage1_mean'] / (df['stage5_mean'] + 1e-8)
-
-    # ── Spike / crash detection ──
-    df['spike_count'] = (vals > vals.mean() + 2*vals.std()).sum(axis=1)
-    df['crash_count'] = (vals < vals.mean() - 2*vals.std()).sum(axis=1)
-    df['spike_ratio'] = df['spike_count'] / (df['crash_count'] + 1)
-
-    return df
+from pipeline import engineer_features
 
 X_tr_fe = engineer_features(X_tr_imp)
 X_te_fe = engineer_features(X_te_imp)
